@@ -1,7 +1,9 @@
 import pytest
+from django.db import IntegrityError
+from django.utils import timezone
 
 from repos.models import Repository
-from research.models import Finding, ResearchSession
+from research.models import Finding, ResearchSession, ToolCall
 
 
 def _make_repo() -> Repository:
@@ -105,3 +107,66 @@ def test_finding_str_includes_file_path_and_optional_line_range() -> None:
     assert str(no_lines) == "Finding at a.py"
     assert str(one_line) == "Finding at a.py:42"
     assert str(range_lines) == "Finding at a.py:42-89"
+
+
+def _make_tool_call(session: ResearchSession, sequence: int = 1, **kwargs: object) -> ToolCall:
+    now = timezone.now()
+    defaults: dict[str, object] = {
+        "session": session,
+        "sequence": sequence,
+        "tool_name": "read_file",
+        "arguments": {"path": "main.py"},
+        "result_content": "",
+        "started_at": now,
+        "completed_at": now,
+    }
+    defaults.update(kwargs)
+    return ToolCall.objects.create(**defaults)
+
+
+@pytest.mark.django_db
+def test_tool_call_can_be_created_with_required_fields_and_defaults() -> None:
+    repo = _make_repo()
+    session = _make_session(repo)
+
+    call = _make_tool_call(session)
+
+    assert call.pk is not None
+    assert call.session_id == session.id
+    assert call.result_truncated is False
+    assert call.is_error is False
+
+
+@pytest.mark.django_db
+def test_tool_call_sequence_is_unique_per_session() -> None:
+    repo = _make_repo()
+    session = _make_session(repo)
+    _make_tool_call(session, sequence=1)
+
+    with pytest.raises(IntegrityError):
+        _make_tool_call(session, sequence=1)
+
+
+@pytest.mark.django_db
+def test_tool_call_same_sequence_allowed_across_different_sessions() -> None:
+    repo = _make_repo()
+    session_a = _make_session(repo, question="A")
+    session_b = _make_session(repo, question="B")
+
+    _make_tool_call(session_a, sequence=1)
+    _make_tool_call(session_b, sequence=1)
+
+    assert ToolCall.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_deleting_session_cascades_to_tool_calls() -> None:
+    repo = _make_repo()
+    session = _make_session(repo)
+    _make_tool_call(session, sequence=1)
+    _make_tool_call(session, sequence=2)
+    assert ToolCall.objects.count() == 2
+
+    session.delete()
+
+    assert ToolCall.objects.count() == 0

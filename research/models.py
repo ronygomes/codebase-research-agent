@@ -84,3 +84,33 @@ class Finding(models.Model):
             if self.line_end:
                 location += f"-{self.line_end}"
         return f"Finding at {location}"
+
+
+class ToolCall(models.Model):
+    """A single tool invocation in a research session's audit trail."""
+
+    session = models.ForeignKey(
+        ResearchSession,
+        on_delete=models.CASCADE,
+        related_name="tool_calls",
+    )
+    sequence = models.IntegerField()
+    tool_name = models.CharField(max_length=100, db_index=True)
+    arguments = models.JSONField()
+    result_content = models.TextField()
+    result_truncated = models.BooleanField(default=False)
+    is_error = models.BooleanField(default=False)
+    started_at = models.DateTimeField()
+    completed_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["session", "sequence"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["session", "sequence"],
+                name="unique_toolcall_sequence_per_session",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tool_name}[{self.sequence}] in session {self.session_id}"
