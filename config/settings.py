@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.auth",
     "repos",
+    "research",
 ]
 
 MIDDLEWARE = []
