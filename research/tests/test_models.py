@@ -1,7 +1,7 @@
 import pytest
 
 from repos.models import Repository
-from research.models import ResearchSession
+from research.models import Finding, ResearchSession
 
 
 def _make_repo() -> Repository:
@@ -65,3 +65,43 @@ def test_deleting_repository_cascades_to_sessions() -> None:
     repo.delete()
 
     assert ResearchSession.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_finding_can_be_created_with_required_fields() -> None:
+    repo = _make_repo()
+    session = _make_session(repo)
+
+    finding = Finding.objects.create(
+        session=session,
+        file_path="fastapi/dependencies/utils.py",
+        note="Core dependency resolution is in solve_dependencies()",
+    )
+
+    assert finding.pk is not None
+    assert finding.session_id == session.id
+    assert finding.line_start is None
+    assert finding.line_end is None
+
+
+@pytest.mark.django_db
+def test_deleting_session_cascades_to_findings() -> None:
+    repo = _make_repo()
+    session = _make_session(repo)
+    Finding.objects.create(session=session, file_path="a.py", note="n1")
+    Finding.objects.create(session=session, file_path="b.py", note="n2")
+    assert Finding.objects.count() == 2
+
+    session.delete()
+
+    assert Finding.objects.count() == 0
+
+
+def test_finding_str_includes_file_path_and_optional_line_range() -> None:
+    no_lines = Finding(file_path="a.py", note="x")
+    one_line = Finding(file_path="a.py", line_start=42, note="x")
+    range_lines = Finding(file_path="a.py", line_start=42, line_end=89, note="x")
+
+    assert str(no_lines) == "Finding at a.py"
+    assert str(one_line) == "Finding at a.py:42"
+    assert str(range_lines) == "Finding at a.py:42-89"

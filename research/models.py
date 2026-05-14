@@ -58,3 +58,29 @@ class ResearchSession(models.Model):
 
     def __str__(self) -> str:
         return f"Session {self.pk}: {self.question[:60]}"
+
+
+class Finding(models.Model):
+    """An agent-curated note about a file in the repository."""
+
+    session = models.ForeignKey(
+        ResearchSession,
+        on_delete=models.CASCADE,
+        related_name="findings",
+    )
+    file_path = models.CharField(max_length=512, db_index=True)
+    line_start = models.IntegerField(null=True, blank=True)
+    line_end = models.IntegerField(null=True, blank=True)
+    note = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self) -> str:
+        location = self.file_path
+        if self.line_start:
+            location += f":{self.line_start}"
+            if self.line_end:
+                location += f"-{self.line_end}"
+        return f"Finding at {location}"
