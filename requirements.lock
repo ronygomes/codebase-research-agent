@@ -12,6 +12,9 @@ django==6.0.5
     # via
     #   codebase-research-agent (pyproject.toml)
     #   dj-database-url
+    #   djangorestframework
+djangorestframework==3.17.1
+    # via codebase-research-agent (pyproject.toml)
 psycopg[binary]==3.3.4
     # via codebase-research-agent (pyproject.toml)
 psycopg-binary==3.3.4

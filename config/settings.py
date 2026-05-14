@@ -14,6 +14,7 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.auth",
+    "rest_framework",
     "repos",
     "research",
 ]
@@ -34,3 +35,11 @@ TIME_ZONE = "UTC"
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+}
+
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "gemini")
+LLM_MODEL = os.environ.get("LLM_MODEL", "gemini-2.0-flash")
