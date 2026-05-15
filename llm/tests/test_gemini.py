@@ -149,6 +149,86 @@ def test_gemini_translates_tool_definitions_to_function_declarations(mock_genai:
     ]
 
 
+def _rate_limit_error(retry_seconds: float = 1.0) -> Any:
+    from google.genai.errors import ClientError
+
+    return ClientError(
+        429,
+        {
+            "error": {
+                "code": 429,
+                "status": "RESOURCE_EXHAUSTED",
+                "details": [
+                    {
+                        "@type": "type.googleapis.com/google.rpc.RetryInfo",
+                        "retryDelay": f"{retry_seconds}s",
+                    }
+                ],
+            }
+        },
+    )
+
+
+def test_gemini_retries_on_429_when_backoff_enabled(mock_genai: Any) -> None:
+    client = Mock()
+    client.models.generate_content.side_effect = [
+        _rate_limit_error(retry_seconds=1.5),
+        _text_response("recovered"),
+    ]
+    mock_genai.Client.return_value = client
+
+    provider = GeminiProvider(api_key="fake", retry_on_rate_limit=True)
+    with patch("llm.providers.gemini.time.sleep") as mock_sleep:
+        response = provider.chat(
+            system_prompt="be helpful",
+            messages=[Message(role="user", content=[TextBlock(text="hi")])],
+            tools=[],
+        )
+
+    assert isinstance(response.content[0], TextBlock)
+    assert response.content[0].text == "recovered"
+    assert client.models.generate_content.call_count == 2
+    mock_sleep.assert_called_once()
+    slept_seconds = mock_sleep.call_args.args[0]
+    assert slept_seconds == pytest.approx(2.5)
+
+
+def test_gemini_does_not_retry_when_backoff_disabled(mock_genai: Any) -> None:
+    client = Mock()
+    client.models.generate_content.side_effect = _rate_limit_error()
+    mock_genai.Client.return_value = client
+
+    provider = GeminiProvider(api_key="fake", retry_on_rate_limit=False)
+    from google.genai.errors import ClientError
+
+    with pytest.raises(ClientError):
+        provider.chat(
+            system_prompt="be helpful",
+            messages=[Message(role="user", content=[TextBlock(text="hi")])],
+            tools=[],
+        )
+
+    assert client.models.generate_content.call_count == 1
+
+
+def test_gemini_gives_up_after_max_retries(mock_genai: Any) -> None:
+    client = Mock()
+    client.models.generate_content.side_effect = _rate_limit_error()
+    mock_genai.Client.return_value = client
+
+    provider = GeminiProvider(api_key="fake", retry_on_rate_limit=True)
+    from google.genai.errors import ClientError
+
+    with patch("llm.providers.gemini.time.sleep"), pytest.raises(ClientError):
+        provider.chat(
+            system_prompt="be helpful",
+            messages=[Message(role="user", content=[TextBlock(text="hi")])],
+            tools=[],
+        )
+
+    assert client.models.generate_content.call_count == GeminiProvider.MAX_RETRIES + 1
+
+
 def test_gemini_round_trips_tool_use_id_to_function_name(mock_genai: Any) -> None:
     client = _mock_client(mock_genai, _text_response("done"))
 

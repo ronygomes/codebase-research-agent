@@ -47,6 +47,9 @@ REST_FRAMEWORK = {
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "gemini")
 LLM_MODEL = os.environ.get("LLM_MODEL", "gemini-2.0-flash")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+ENABLE_GEMINI_RETRY_BACKOFF = (
+    os.environ.get("ENABLE_GEMINI_RETRY_BACKOFF", "true").lower() == "true"
+)
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
 CELERY_TASK_ALWAYS_EAGER = os.environ.get("CELERY_TASK_ALWAYS_EAGER", "false").lower() == "true"

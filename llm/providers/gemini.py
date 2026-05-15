@@ -1,7 +1,10 @@
+import re
+import time
 import uuid
-from typing import Any
+from typing import Any, ClassVar
 
 from google import genai
+from google.genai.errors import ClientError
 
 from llm.providers.base import LLMProvider
 from llm.types import (
@@ -16,10 +19,35 @@ from llm.types import (
 )
 
 
+_RETRY_DELAY_PATTERN = re.compile(r"^([\d.]+)s$")
+
+
+def _extract_retry_delay_seconds(error: ClientError, fallback: float = 30.0) -> float:
+    try:
+        details_list = error.details.get("error", {}).get("details", [])
+    except (AttributeError, TypeError):
+        return fallback
+    for detail in details_list:
+        if str(detail.get("@type", "")).endswith("RetryInfo"):
+            match = _RETRY_DELAY_PATTERN.match(str(detail.get("retryDelay", "")))
+            if match:
+                return float(match.group(1))
+    return fallback
+
+
 class GeminiProvider(LLMProvider):
-    def __init__(self, api_key: str, model_name: str = "gemini-2.0-flash") -> None:
+    MAX_RETRIES: ClassVar[int] = 2
+    RETRY_BUFFER_SECONDS: ClassVar[float] = 1.0
+
+    def __init__(
+        self,
+        api_key: str,
+        model_name: str = "gemini-2.0-flash",
+        retry_on_rate_limit: bool = True,
+    ) -> None:
         self._model_name = model_name
         self._client = genai.Client(api_key=api_key)
+        self._retry_on_rate_limit = retry_on_rate_limit
 
     @property
     def provider_name(self) -> str:
@@ -46,12 +74,24 @@ class GeminiProvider(LLMProvider):
         if tools:
             config_kwargs["tools"] = self._build_tools(tools)
 
-        response = self._client.models.generate_content(
-            model=self._model_name,
-            contents=self._build_contents(messages),
-            config=genai.types.GenerateContentConfig(**config_kwargs),
-        )
-        return self._parse_response(response)
+        for attempt in range(self.MAX_RETRIES + 1):
+            try:
+                response = self._client.models.generate_content(
+                    model=self._model_name,
+                    contents=self._build_contents(messages),
+                    config=genai.types.GenerateContentConfig(**config_kwargs),
+                )
+                return self._parse_response(response)
+            except ClientError as error:
+                if (
+                    error.code != 429
+                    or not self._retry_on_rate_limit
+                    or attempt == self.MAX_RETRIES
+                ):
+                    raise
+                delay = _extract_retry_delay_seconds(error) + self.RETRY_BUFFER_SECONDS
+                time.sleep(delay)
+        raise RuntimeError("unreachable: retry loop exited without return or raise")
 
     def _build_tools(self, tools: list[ToolDefinition]) -> list[Any]:
         return [

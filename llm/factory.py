@@ -10,5 +10,6 @@ def get_llm_provider() -> LLMProvider:
         return GeminiProvider(
             api_key=settings.GEMINI_API_KEY,
             model_name=settings.LLM_MODEL,
+            retry_on_rate_limit=settings.ENABLE_GEMINI_RETRY_BACKOFF,
         )
     raise ValueError(f"Unknown LLM provider: {provider}")

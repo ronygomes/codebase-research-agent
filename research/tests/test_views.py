@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -27,8 +28,8 @@ def test_post_session_creates_queued_session_and_enqueues_task(api_client: APICl
 
     session = ResearchSession.objects.get(id=response.data["id"])
     assert session.status == ResearchSession.Status.QUEUED
-    assert session.llm_provider == "gemini"
-    assert session.llm_model == "gemini-2.0-flash"
+    assert session.llm_provider == settings.LLM_PROVIDER
+    assert session.llm_model == settings.LLM_MODEL
     mock_delay.assert_called_once_with(session.id)
 
 
