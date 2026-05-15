@@ -13,7 +13,7 @@ class Repository(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-last_analyzed_at"]
+        ordering = ["-last_analyzed_at", "-id"]
         verbose_name_plural = "repositories"
 
     def __str__(self) -> str:

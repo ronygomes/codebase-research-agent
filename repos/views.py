@@ -9,4 +9,6 @@ class RepositoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RepositorySerializer
 
     def get_queryset(self) -> QuerySet[Repository]:
-        return Repository.objects.annotate(session_count=Count("sessions"))
+        return Repository.objects.annotate(
+            session_count=Count("sessions"),
+        ).order_by("-last_analyzed_at", "-id")
