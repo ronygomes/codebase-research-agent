@@ -49,4 +49,4 @@ django_settings_module = "config.settings"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 addopts = "-ra --strict-markers"
-testpaths = ["llm", "repos", "research", "tools"]
+testpaths = ["agent", "llm", "repos", "research", "tools"]

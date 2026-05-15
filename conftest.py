@@ -20,6 +20,18 @@ def mock_ensure_cloned() -> Iterator[Any]:
         yield mock
 
 
+@pytest.fixture(autouse=True)
+def mock_agent_in_task() -> Iterator[Any]:
+    with patch("research.tasks.Agent") as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_llm_provider() -> Iterator[Any]:
+    with patch("research.tasks.get_llm_provider") as mock:
+        yield mock
+
+
 @pytest.fixture
 def api_client() -> APIClient:
     return APIClient()
