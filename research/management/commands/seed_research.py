@@ -1,7 +1,8 @@
+import time
 from typing import Any
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandParser
 
 from agent.core import Agent
 from llm.factory import get_llm_provider
@@ -29,8 +30,22 @@ def _derive_name(url: str) -> str:
 class Command(BaseCommand):
     help = "Run the agent against a curated set of repos to populate sample data."
 
+    def add_arguments(self, parser: CommandParser) -> None:
+        parser.add_argument(
+            "--delay-seconds",
+            type=int,
+            default=0,
+            help="Seconds to sleep between sessions (helps with strict LLM rate limits).",
+        )
+
     def handle(self, *args: Any, **options: Any) -> None:
-        for url, question in SEED_SPECS:
+        delay = int(options["delay_seconds"])
+
+        for index, (url, question) in enumerate(SEED_SPECS):
+            if index > 0 and delay > 0:
+                self.stdout.write(f"\n  ⏸  sleeping {delay}s before next session...")
+                time.sleep(delay)
+
             normalized = url.removesuffix("/")
             self.stdout.write(self.style.MIGRATE_HEADING(f"\n→ {normalized}"))
             self.stdout.write(f"  Question: {question}")
