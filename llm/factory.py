@@ -2,6 +2,7 @@ from django.conf import settings
 
 from llm.providers.base import LLMProvider
 from llm.providers.gemini import GeminiProvider
+from llm.providers.ollama import OllamaProvider
 
 
 def get_llm_provider() -> LLMProvider:
@@ -12,4 +13,6 @@ def get_llm_provider() -> LLMProvider:
             model_name=settings.LLM_MODEL,
             retry_on_rate_limit=settings.ENABLE_GEMINI_RETRY_BACKOFF,
         )
+    if provider == "ollama":
+        return OllamaProvider(model_name=settings.LLM_MODEL)
     raise ValueError(f"Unknown LLM provider: {provider}")

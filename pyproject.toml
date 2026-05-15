@@ -9,6 +9,7 @@ dependencies = [
     "celery[redis]",
     "dulwich",
     "google-genai",
+    "ollama",
     "pathspec",
     "pydantic",
     "psycopg[binary]",
