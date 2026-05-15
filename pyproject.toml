@@ -7,6 +7,7 @@ dependencies = [
     "django>=5.0",
     "djangorestframework",
     "celery[redis]",
+    "dulwich",
     "psycopg[binary]",
     "dj-database-url",
     "python-dotenv",

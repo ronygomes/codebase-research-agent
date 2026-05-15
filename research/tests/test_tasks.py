@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from repos.models import Repository
@@ -21,3 +23,20 @@ def test_run_research_session_marks_running_and_records_task_id() -> None:
     assert session.status == ResearchSession.Status.RUNNING
     assert session.started_at is not None
     assert session.celery_task_id == result.id
+
+
+@pytest.mark.django_db
+def test_run_research_session_clones_repository(mock_ensure_cloned: Any) -> None:
+    repo = Repository.objects.create(url="https://github.com/a/b", name="a/b")
+    session = ResearchSession.objects.create(
+        repository=repo,
+        question="x",
+        llm_provider="gemini",
+        llm_model="gemini-2.0-flash",
+    )
+
+    run_research_session.delay(session.id)
+
+    mock_ensure_cloned.assert_called_once()
+    called_repo = mock_ensure_cloned.call_args.args[0]
+    assert called_repo.id == repo.id
