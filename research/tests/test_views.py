@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -7,15 +9,16 @@ from research.models import ResearchSession
 
 
 @pytest.mark.django_db
-def test_post_session_creates_queued_session(api_client: APIClient) -> None:
-    response = api_client.post(
-        "/api/v1/sessions/",
-        {
-            "repo_url": "https://github.com/tiangolo/fastapi",
-            "question": "How does dependency injection work?",
-        },
-        format="json",
-    )
+def test_post_session_creates_queued_session_and_enqueues_task(api_client: APIClient) -> None:
+    with patch("research.views.run_research_session.delay") as mock_delay:
+        response = api_client.post(
+            "/api/v1/sessions/",
+            {
+                "repo_url": "https://github.com/tiangolo/fastapi",
+                "question": "How does dependency injection work?",
+            },
+            format="json",
+        )
 
     assert response.status_code == status.HTTP_202_ACCEPTED
     assert response.data["status"] == "queued"
@@ -26,6 +29,7 @@ def test_post_session_creates_queued_session(api_client: APIClient) -> None:
     assert session.status == ResearchSession.Status.QUEUED
     assert session.llm_provider == "gemini"
     assert session.llm_model == "gemini-2.0-flash"
+    mock_delay.assert_called_once_with(session.id)
 
 
 @pytest.mark.django_db

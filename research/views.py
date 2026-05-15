@@ -11,6 +11,7 @@ from research.serializers import (
     SessionDetailSerializer,
     SessionListSerializer,
 )
+from research.tasks import run_research_session
 
 
 class SessionViewSet(
@@ -42,5 +43,6 @@ class SessionViewSet(
         serializer = CreateSessionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         session = serializer.save()
+        run_research_session.delay(session.id)
         response_serializer = SessionAcceptedSerializer(session)
         return Response(response_serializer.data, status=status.HTTP_202_ACCEPTED)

@@ -6,6 +6,12 @@ from rest_framework.test import APIClient
 from repos.models import Repository
 
 
+@pytest.fixture(autouse=True)
+def _eager_celery(settings: Any) -> None:
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    settings.CELERY_TASK_EAGER_PROPAGATES = True
+
+
 @pytest.fixture
 def api_client() -> APIClient:
     return APIClient()

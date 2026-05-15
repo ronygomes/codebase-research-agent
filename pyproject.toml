@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "django>=5.0",
     "djangorestframework",
+    "celery[redis]",
     "psycopg[binary]",
     "dj-database-url",
     "python-dotenv",
