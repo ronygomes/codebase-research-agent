@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "llm",
     "repos",
     "research",
+    "tools",
 ]
 
 MIDDLEWARE = []

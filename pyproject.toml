@@ -9,6 +9,8 @@ dependencies = [
     "celery[redis]",
     "dulwich",
     "google-genai",
+    "pathspec",
+    "pydantic",
     "psycopg[binary]",
     "dj-database-url",
     "python-dotenv",
@@ -47,4 +49,4 @@ django_settings_module = "config.settings"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 addopts = "-ra --strict-markers"
-testpaths = ["llm", "repos", "research"]
+testpaths = ["llm", "repos", "research", "tools"]
