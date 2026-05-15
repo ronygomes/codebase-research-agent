@@ -6,6 +6,12 @@
 #
 amqp==5.3.1
     # via kombu
+annotated-types==0.7.0
+    # via pydantic
+anyio==4.13.0
+    # via
+    #   google-genai
+    #   httpx
 asgiref==3.11.1
     # via django
 ast-serialize==0.3.0
@@ -16,6 +22,15 @@ build==1.5.0
     # via pip-tools
 celery[redis]==5.6.3
     # via codebase-research-agent (pyproject.toml)
+certifi==2026.4.22
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
+cffi==2.0.0
+    # via cryptography
+charset-normalizer==3.4.7
+    # via requests
 click==8.3.3
     # via
     #   celery
@@ -29,6 +44,10 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
+cryptography==48.0.0
+    # via google-auth
+distro==1.9.0
+    # via google-genai
 dj-database-url==3.1.2
     # via codebase-research-agent (pyproject.toml)
 django==6.0.5
@@ -50,6 +69,21 @@ djangorestframework-stubs[compatible-mypy]==3.17.0
     # via codebase-research-agent (pyproject.toml)
 dulwich==1.2.1
     # via codebase-research-agent (pyproject.toml)
+google-auth[requests]==2.52.0
+    # via google-genai
+google-genai==2.2.0
+    # via codebase-research-agent (pyproject.toml)
+h11==0.16.0
+    # via httpcore
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via google-genai
+idna==3.15
+    # via
+    #   anyio
+    #   httpx
+    #   requests
 iniconfig==2.3.0
     # via pytest
 kombu[redis]==5.6.2
@@ -81,6 +115,16 @@ psycopg[binary]==3.3.4
     # via codebase-research-agent (pyproject.toml)
 psycopg-binary==3.3.4
     # via psycopg
+pyasn1==0.6.3
+    # via pyasn1-modules
+pyasn1-modules==0.4.2
+    # via google-auth
+pycparser==3.0
+    # via cffi
+pydantic==2.13.4
+    # via google-genai
+pydantic-core==2.46.4
+    # via pydantic
 pygments==2.20.0
     # via pytest
 pyproject-hooks==1.2.0
@@ -99,29 +143,46 @@ python-dotenv==1.2.2
     # via codebase-research-agent (pyproject.toml)
 redis==6.4.0
     # via kombu
+requests==2.34.2
+    # via
+    #   google-auth
+    #   google-genai
 ruff==0.15.13
     # via codebase-research-agent (pyproject.toml)
 six==1.17.0
     # via python-dateutil
+sniffio==1.3.1
+    # via google-genai
 sqlparse==0.5.5
     # via django
+tenacity==9.1.4
+    # via google-genai
 types-pyyaml==6.0.12.20260510
     # via
     #   django-stubs
     #   djangorestframework-stubs
 typing-extensions==4.15.0
     # via
+    #   anyio
     #   django-stubs
     #   django-stubs-ext
     #   djangorestframework-stubs
+    #   google-genai
     #   mypy
     #   psycopg
+    #   pydantic
+    #   pydantic-core
+    #   typing-inspection
+typing-inspection==0.4.2
+    # via pydantic
 tzdata==2026.2
     # via kombu
 tzlocal==5.3.1
     # via celery
 urllib3==2.7.0
-    # via dulwich
+    # via
+    #   dulwich
+    #   requests
 vine==5.1.0
     # via
     #   amqp
@@ -129,6 +190,8 @@ vine==5.1.0
     #   kombu
 wcwidth==0.7.0
     # via prompt-toolkit
+websockets==16.0
+    # via google-genai
 wheel==0.47.0
     # via pip-tools
 
