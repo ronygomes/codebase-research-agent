@@ -25,8 +25,8 @@ erDiagram
         string status "queued | running | completed | failed (indexed)"
         string termination_reason "completed | max_iterations | max_tokens | timeout | duplicate_calls | error"
         text error_message
-        string llm_provider "gemini | claude"
-        string llm_model "e.g. gemini-2.0-flash"
+        string llm_provider "gemini | ollama"
+        string llm_model "e.g. gemini-2.5-flash-lite, qwen2.5:7b"
         int input_tokens "cumulative"
         int output_tokens "cumulative"
         int iteration_count
